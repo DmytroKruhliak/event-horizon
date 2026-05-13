@@ -34,7 +34,7 @@ function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Real-time clock — ticks every 10 seconds
+  // Real-time clock — ticks every 1 second 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
@@ -59,6 +59,7 @@ function Dashboard() {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
   });
 
   return (
