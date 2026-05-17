@@ -1,13 +1,21 @@
 
 const { execSync } = require('child_process');
 
+// Get branch name from command line arguments
+const branchName = process.argv[2];
+
+if (!branchName) {
+    console.error('Error: branchName argument is required.');
+    console.log('Usage: node commit_changes.js <branchName>');
+    process.exit(1);
+}
+
 function generateCommitMessage(diffOutput) {
     if (!diffOutput || diffOutput.trim() === '') {
         return "chore: No significant changes detected";
     }
 
     const lines = diffOutput.split(/\r?\n/);
-
     const changes = {
         feat: [],
         fix: [],
@@ -136,7 +144,13 @@ try {
     execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
     console.log('Successfully committed changes.');
 
+    // Push changes to origin
+    console.log(`Pushing changes to origin/${branchName}...`);
+    execSync(`git push origin ${branchName}`, { stdio: 'inherit' });
+    console.log('Successfully pushed changes.');
+
 } catch (error) {
-    console.error('Failed to commit changes:', error.message);
+    console.error('Failed to complete operations:', error.message);
     process.exit(1);
 }
+
