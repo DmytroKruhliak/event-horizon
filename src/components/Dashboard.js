@@ -88,7 +88,7 @@ function Dashboard() {
             )}
 
             {!loading && sortedEvents.length === 0 && (
-              <div style={styles.loadingMsg}>No events in this window</div>
+              <div style={styles.loadingMsg}>No events in this windows</div>
             )}
 
             {sortedEvents.map((event) => (
