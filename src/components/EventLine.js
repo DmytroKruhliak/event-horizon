@@ -40,22 +40,6 @@ function EventLine({ event, windowStart, windowEnd, now }) {
   const barWidthPx    = (widthPct / 100) * trackWidth;
   const showLabels    = barWidthPx > 80;
 
-  const barStyle = {
-    position: 'absolute',
-    left: `${leftPct}%`,
-    width: `${widthPct}%`,
-    top: 6,
-    height: 42,
-    borderRadius: 6,
-    display: 'flex',
-    alignItems: 'center',
-    overflow: 'hidden',
-    cursor: 'pointer',
-    transition: 'left 0.8s cubic-bezier(0.4,0,0.2,1), width 0.8s cubic-bezier(0.4,0,0.2,1)',
-    background: isPast ? 'rgba(40,36,60,0.6)'      : colors.bar,
-    border:     isPast ? '1px solid rgba(80,70,110,0.3)' : `1px solid ${colors.border}`,
-    opacity:    isPast ? 0.55 : 1,
-  };
 
   const avatarStyle = {
     width: 30,
@@ -83,33 +67,52 @@ function EventLine({ event, windowStart, windowEnd, now }) {
       }} />
 
       <div
-        style={barStyle}
+        style={{
+          position: 'absolute',
+          left: `${leftPct}%`,
+          width: `${widthPct}%`,
+          top: 6,
+          height: 42,
+          cursor: 'pointer',
+          transition: 'left 0.8s cubic-bezier(0.4,0,0.2,1), width 0.8s cubic-bezier(0.4,0,0.2,1)',
+        }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        {/* Avatar */}
-        <div style={avatarStyle}>
-          <img
-            src={event.pictureUrl}
-            alt={event.name}
-            width={30}
-            height={30}
-            style={{ display: 'block' }}
-          />
-        </div>
-
-        {/* Text labels — hidden when bar is too narrow */}
-        {showLabels && (
-          <div style={{ marginLeft: 8, overflow: 'hidden', minWidth: 0, flex: 1, paddingRight: 8 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: isPast ? '#5a5070' : '#e2ddf5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {event.name}
-            </div>
-            <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(220,210,255,0.55)', marginTop: 1, whiteSpace: 'nowrap' }}>
-              {formatTimeUntil(event.startTime, now)} · {formatDuration(event.duration)}
-            </div>
+        <div style={{
+          height: '100%',
+          width: '100%',
+          borderRadius: 6,
+          display: 'flex',
+          alignItems: 'center',
+          overflow: 'hidden',
+          background: isPast ? 'rgba(40,36,60,0.6)'      : colors.bar,
+          border:     isPast ? '1px solid rgba(80,70,110,0.3)' : `1px solid ${colors.border}`,
+          opacity:    isPast ? 0.55 : 1,
+        }}>
+          {/* Avatar */}
+          <div style={avatarStyle}>
+            <img
+              src={event.pictureUrl}
+              alt={event.name}
+              width={30}
+              height={30}
+              style={{ display: 'block' }}
+            />
           </div>
-        )}
 
+          {/* Text labels — hidden when bar is too narrow */}
+          {showLabels && (
+            <div style={{ marginLeft: 8, overflow: 'hidden', minWidth: 0, flex: 1, paddingRight: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: isPast ? '#5a5070' : '#e2ddf5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {event.name}
+              </div>
+              <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(220,210,255,0.55)', marginTop: 1, whiteSpace: 'nowrap' }}>
+                {formatTimeUntil(event.startTime, now)} · {formatDuration(event.duration)}
+              </div>
+            </div>
+          )}
+        </div>
         {/* Tooltip — shown on hover */}
         {hovered && <EventTooltip event={event} />}
       </div>
