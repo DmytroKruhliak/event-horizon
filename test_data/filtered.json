@@ -1,0 +1,52 @@
+{
+  "name": "La2world chat",
+  "type": "private_supergroup",
+  "id": 1238941469,
+  "messages": [
+    {
+      "id": 1431609,
+      "type": "message",
+      "date": "2025-12-26T06:14:40",
+      "date_unixtime": "1766726080",
+      "from": "Suspicious Merchant",
+      "from_id": "user8386267802",
+      "text": "Осада крепости Крепость Белых Песков начнется через 60 минут!"
+    },
+    {
+      "id": 1431610,
+      "type": "message",
+      "date": "2025-12-26T06:17:34",
+      "date_unixtime": "1766726254",
+      "from": "Suspicious Merchant",
+      "from_id": "user8386267802",
+      "text": "Осада крепости Заснеженная Крепость начнется через 60 минут!"
+    },
+    {
+      "id": 1431612,
+      "type": "message",
+      "date": "2025-12-26T07:14:40",
+      "date_unixtime": "1766729680",
+      "from": "Suspicious Merchant",
+      "from_id": "user8386267802",
+      "text": "Осада Крепость Белых Песков началась!"
+    },
+    {
+      "id": 1431613,
+      "type": "message",
+      "date": "2025-12-26T07:17:34",
+      "date_unixtime": "1766729854",
+      "from": "Suspicious Merchant",
+      "from_id": "user8386267802",
+      "text": "Осада Заснеженная Крепость началась!"
+    },
+    {
+      "id": 1431625,
+      "type": "message",
+      "date": "2025-12-26T08:17:34",
+      "date_unixtime": "1766733454",
+      "from": "Suspicious Merchant",
+      "from_id": "user8386267802",
+      "text": "23М65 отстоял крепость Заснеженная Крепость!"
+    }
+  ]
+}
