@@ -15,7 +15,7 @@ const MOCK_EVENTS = [
   {
     id: 10,
     name: 'Осада крепости Крепость Белых Песков начнется через 60 минут!',
-    startTime: new Date(1766726080 * 1000).toISOString(),
+    startTime: new Date(Date.now() - 1 * 3600000).toISOString(), // 1 hour ago
     duration: 55,
     priority: 2,
     description: 'Event related to: Осада крепости Крепость Белых Песков начнется через 60 минут!',
@@ -24,7 +24,7 @@ const MOCK_EVENTS = [
   {
     id: 11,
     name: 'Осада крепости Заснеженная Крепость начнется через 60 минут!',
-    startTime: new Date(1766726254 * 1000).toISOString(),
+    startTime: new Date(Date.now() - 4 * 3600000).toISOString(), // 4 hours ago
     duration: 98,
     priority: 1,
     description: 'Event related to: Осада крепости Заснеженная Крепость начнется через 60 минут!',
@@ -33,7 +33,7 @@ const MOCK_EVENTS = [
   {
     id: 12,
     name: 'Осада Крепость Белых Песков началась!',
-    startTime: new Date(1766729680 * 1000).toISOString(),
+    startTime: new Date(Date.now() + 0.5 * 3600000).toISOString(), // 30 minutes from now
     duration: 73,
     priority: 3,
     description: 'Event related to: Осада Крепость Белых Песков началась!',
@@ -42,7 +42,7 @@ const MOCK_EVENTS = [
   {
     id: 13,
     name: 'Осада Заснеженная Крепость началась!',
-    startTime: new Date(1766729854 * 1000).toISOString(),
+    startTime: new Date(Date.now() + 2 * 3600000).toISOString(), // 2 hours from now
     duration: 45,
     priority: 2,
     description: 'Event related to: Осада Заснеженная Крепость началась!',
@@ -51,7 +51,7 @@ const MOCK_EVENTS = [
   {
     id: 14,
     name: '23М65 отстоял крепость Заснеженная Крепость!',
-    startTime: new Date(1766733454 * 1000).toISOString(),
+    startTime: new Date(Date.now() + 6 * 3600000).toISOString(), // 6 hours from now
     duration: 112,
     priority: 1,
     description: 'Event related to: 23М65 отстоял крепость Заснеженная Крепость!',
