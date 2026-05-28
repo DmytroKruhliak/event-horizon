@@ -33,7 +33,7 @@ const MOCK_EVENTS = [
   {
     id: 12,
     name: 'Осада Крепость Белых Песков началась!',
-    startTime: new Date(Date.now() + 0.5 * 3600000).toISOString(), // 30 minutes from now
+    startTime: new Date(Date.now() - 0 * 3600000).toISOString(), // 2 hours ago
     duration: 73,
     priority: 3,
     description: 'Event related to: Осада Крепость Белых Песков началась!',

@@ -20,23 +20,42 @@ function NowLine() {
       zIndex: 20,
       pointerEvents: 'none',
     }}>
-      {/* "NOW" badge above the line */}
       <div style={{
         position: 'absolute',
-        top: -22,
+        top: -70,
         left: '50%',
         transform: 'translateX(-50%)',
-        background: '#e05555',
-        color: '#fff',
-        fontSize: 9,
-        fontFamily: 'monospace',
-        fontWeight: 700,
-        padding: '2px 6px',
-        borderRadius: 3,
-        letterSpacing: '0.1em',
-        whiteSpace: 'nowrap',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        zIndex: 21,
       }}>
-        NOW
+        <div style={{
+          background: '#e05555',
+          color: '#fff',
+          fontSize: 10,
+          fontFamily: 'monospace',
+          fontWeight: 700,
+          padding: '4px 4px',
+          borderRadius: '2px 2px 0 0',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: '0.9',
+          minWidth: 16,
+        }}>
+          <span>N</span>
+          <span>O</span>
+          <span>W</span>
+        </div>
+        <div style={{
+          width: 0,
+          height: 0,
+          borderLeft: '8px solid transparent',
+          borderRight: '8px solid transparent',
+          borderTop: '8px solid #e05555',
+        }} />
       </div>
 
       {/* Small dot at the top of the line */}
