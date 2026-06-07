@@ -80,7 +80,7 @@ function Dashboard() {
           <TimeAxis windowStart={windowStart} windowEnd={windowEnd} view={view} />
 
           {/* Track — contains the NOW line and all event bars */}
-          <div style={{ position: 'relative', paddingLeft: 18 }}>
+          <div style={{ position: 'relative' }}>
             <NowLine />
 
             {loading && (

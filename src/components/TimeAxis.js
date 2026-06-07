@@ -23,13 +23,13 @@ function TimeAxis({ windowStart, windowEnd, view }) {
   let t = Math.ceil(windowStart / step) * step;
 
   while (t <= windowEnd) {
-    const pct = ((t - windowStart) / (windowEnd - windowStart)) * 100;
+    const positionPercentage = ((t - windowStart) / (windowEnd - windowStart)) * 100;
     const d = new Date(t);
     const label = view === 'day'
       ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-    ticks.push({ pct, label, key: t });
+    ticks.push({ positionPercentage, label, key: t });
     t += step;
   }
 
@@ -40,13 +40,13 @@ function TimeAxis({ windowStart, windowEnd, view }) {
       marginBottom: 4,
       borderBottom: '1px solid rgba(255,255,255,0.06)',
     }}>
-      {ticks.map(({ pct, label, key }) => (
+      {ticks.map(({ positionPercentage, label, key }) => (
         <div
           key={key}
           style={{
             position: 'absolute',
             bottom: 0,
-            left: `${pct}%`,
+            left: `${positionPercentage}%`,
             transform: 'translateX(-50%)',
           }}
         >
