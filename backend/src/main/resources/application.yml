@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+logging:
+  # Console plus a rolling file (backend/logs/backend.log, gitignored), kept for 14 days.
+  file:
+    name: logs/backend.log
+  logback:
+    rollingpolicy:
+      max-history: 14
+  level:
+    # DEBUG also shows duplicate skips and empty catch-ups.
+    com.eventhorizon: INFO
+
+spring:
+  application:
+    name: event-horizon-backend
+  config:
+    # Machine-specific overrides (gitignored), e.g. Telegram api-id/api-hash.
+    import: optional:classpath:application-local.yml
+
+telegram:
+  enabled: true
+  # Same env var names the l2 Python scripts use.
+  api-id: ${TELEGRAM_API_ID:}
+  api-hash: ${TELEGRAM_API_HASH:}
+  phone: ${TELEGRAM_PHONE:}
+  chat-id: -1001238941469   # La2world chat
+  sender-id: 8386267802     # Suspicious Merchant
+  session-dir: ./tdlib-session
+  backfill: 3d
+  # Re-check Telegram this often for messages the live connection missed (sleep, network drops).
+  resync-interval: 2m
+  # Telegram timestamps are real UTC instants and the dashboard renders them in game server time
+  # (UTC+3, SERVER_TIME_ZONE in src/utils.js), so no shift is needed here.
+  # (The Python scripts add +2h only because they print naive local times.)
+  time-correction: 0h
+
+forts:
+  siege-start-delay: 1h
+  siege-duration: 60m
+  ready-after: 8h

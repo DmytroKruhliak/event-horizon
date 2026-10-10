@@ -1,59 +1,99 @@
 import React, { useState, useEffect } from 'react';
-import EventLine from './EventLine';
+import FortRow, { LABEL_WIDTH } from './FortRow';
 import NowLine from './NowLine';
 import TimeAxis from './TimeAxis';
 import ViewToggle from './ViewToggle';
-import { fetchEvents } from '../api';
-import { GOLDEN_RATIO, VIEW_MS, sortEvents } from '../utils';
+import { fetchEvents, fetchForts, subscribeToEvents } from '../api';
+import { FORT_STATUSES, GOLDEN_RATIO, VIEW_MS, formatServerTime, siegeImages, upsertEvents } from '../utils';
+
+/** Fort statuses age without new messages (Pending turns Ready), so refresh periodically too. */
+const FORTS_REFRESH_MS = 60000;
 
 /**
  * Dashboard
  *
  * Top-level component. Responsibilities:
- *   - Fetch events from the backend (via api.js) on mount.
- *   - Maintain a real-time clock that ticks every 10 seconds.
+ *   - Fetch events and fort statuses from the backend (via api.js) on mount,
+ *     then keep them live via the event stream.
+ *   - Maintain a real-time clock that ticks every second.
  *   - Compute the visible time window based on the selected view.
- *   - Sort events by priority (then name) and render one EventLine per event.
+ *   - Render one FortRow per fort, in the backend's status order, each with
+ *     that fort's events in the visible window.
  *
  * Time window logic:
- *   The NOW line is always at the Golden Ratio position (61.8% from left).
- *   windowStart = now - 0.618 × totalMs
- *   windowEnd   = now + 0.382 × totalMs
- *   As time advances, all event bars drift left toward the NOW line.
+ *   The NOW line is always at the Golden Ratio position (38.2% from left).
+ *   windowStart = now - 0.382 × totalMs
+ *   windowEnd   = now + 0.618 × totalMs
+ *   As time advances, all markers drift left past the NOW line.
  */
 function Dashboard() {
   const [events,  setEvents]  = useState([]);
+  const [forts,   setForts]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [view,    setView]    = useState('day');
   const [now,     setNow]     = useState(Date.now());
 
-  // Fetch events once on mount
+  // Every (re)connect refetches everything so nothing missed while
+  // disconnected is lost; live updates replace events by id and refresh
+  // fort statuses, which each new message can change.
   useEffect(() => {
-    fetchEvents()
-      .then(setEvents)
-      .finally(() => setLoading(false));
+    const loadForts = () =>
+      fetchForts()
+        .then(setForts)
+        .catch((err) => console.error(err));
+    const load = () =>
+      Promise.all([
+        fetchEvents().then((fetched) => setEvents((prev) => upsertEvents(prev, fetched))),
+        loadForts(),
+      ])
+        .catch((err) => console.error(err))
+        .finally(() => setLoading(false));
+
+    load();
+    const refresh = setInterval(loadForts, FORTS_REFRESH_MS);
+    const unsubscribe = subscribeToEvents(
+      (event) => {
+        setEvents((prev) => upsertEvents(prev, [event]));
+        loadForts();
+      },
+      load,
+    );
+    return () => {
+      clearInterval(refresh);
+      unsubscribe();
+    };
   }, []);
 
-  // Real-time clock — ticks every 1 second 
+  // Real-time clock — ticks every 1 second
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const totalMs    = VIEW_MS[view];
+  const totalMs     = VIEW_MS[view];
   const windowStart = now - GOLDEN_RATIO * totalMs;
   const windowEnd   = now + (1 - GOLDEN_RATIO) * totalMs;
 
-  // Only render events that overlap the visible window
-  const visibleEvents = events.filter((e) => {
+  // Pictures go to sieges in time order across all events, so they stay put as the window moves
+  const images = siegeImages(events);
+
+  // Only pass on events that overlap the visible window, grouped by fort
+  const eventsByFort = new Map();
+  events.forEach((e) => {
     const start = new Date(e.startTime).getTime();
     const end   = start + e.duration * 60000;
-    return end >= windowStart && start <= windowEnd;
+    if (end < windowStart || start > windowEnd) return;
+    if (!eventsByFort.has(e.fort)) eventsByFort.set(e.fort, []);
+    eventsByFort.get(e.fort).push(e);
   });
 
-  const sortedEvents = sortEvents(visibleEvents);
+  // Rows come from /api/forts; if that failed, fall back to forts seen in events
+  const rows = forts.length > 0
+    ? forts
+    : [...eventsByFort.keys()].map((fort) => ({ fort, status: 'Unknown', time: null, owner: null }));
 
-  const clockLabel = new Date(now).toLocaleString([], {
+  // Game server time (UTC+3), not the browser's zone
+  const clockLabel = formatServerTime(now, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -70,31 +110,36 @@ function Dashboard() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>Event Horizon</h1>
-            <p style={styles.subtitle}>{clockLabel}</p>
+            <p style={styles.subtitle}>{clockLabel} · server time</p>
           </div>
           <ViewToggle view={view} onChange={setView} />
         </div>
 
-        {/* Timeline canvas */}
+        {/* Timeline canvas — the axis and NOW line span the track, right of the fort labels */}
         <div style={styles.canvas}>
-          <TimeAxis windowStart={windowStart} windowEnd={windowEnd} view={view} />
+          <div style={{ marginLeft: LABEL_WIDTH }}>
+            <TimeAxis windowStart={windowStart} windowEnd={windowEnd} view={view} />
+          </div>
 
-          {/* Track — contains the NOW line and all event bars */}
           <div style={{ position: 'relative' }}>
-            <NowLine />
+            <div style={{ ...styles.trackOverlay, left: LABEL_WIDTH }}>
+              <NowLine />
+            </div>
 
             {loading && (
-              <div style={styles.loadingMsg}>Fetching events...</div>
+              <div style={styles.loadingMsg}>Fetching forts...</div>
             )}
 
-            {!loading && sortedEvents.length === 0 && (
-              <div style={styles.loadingMsg}>No events in this windows</div>
+            {!loading && rows.length === 0 && (
+              <div style={styles.loadingMsg}>No fort data — is the backend running?</div>
             )}
 
-            {sortedEvents.map((event) => (
-              <EventLine
-                key={event.id}
-                event={event}
+            {rows.map((fort) => (
+              <FortRow
+                key={fort.fort}
+                fort={fort}
+                events={eventsByFort.get(fort.fort) || []}
+                images={images}
                 windowStart={windowStart}
                 windowEnd={windowEnd}
                 now={now}
@@ -103,18 +148,15 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Priority legend */}
+        {/* Status legend */}
         <div style={styles.legend}>
-          {[
-            { priority: 1, label: 'High priority',   dot: '#e05555' },
-            { priority: 2, label: 'Normal priority',  dot: '#b4a0ff' },
-            { priority: 3, label: 'Low priority',     dot: '#50b4a0' },
-          ].map(({ priority, label, dot }) => (
-            <div key={priority} style={styles.legendItem}>
-              <div style={{ ...styles.legendDot, background: dot }} />
+          {FORT_STATUSES.map(({ status, label, color }) => (
+            <div key={status} style={styles.legendItem}>
+              <div style={{ ...styles.legendDot, background: color }} />
               <span style={styles.legendLabel}>{label}</span>
             </div>
           ))}
+          <span style={styles.legendLabel}>· flag = siege · strip = cooldown until Ready</span>
         </div>
 
       </div>
@@ -153,6 +195,13 @@ const styles = {
   },
   canvas: {
     position: 'relative',
+  },
+  trackOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
   },
   loadingMsg: {
     padding: '32px 0',

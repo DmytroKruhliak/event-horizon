@@ -1,1 +1,12 @@
 node_modules
+build
+
+# secrets
+.env
+.env.*
+
+# backend
+backend/target/
+backend/logs/
+backend/tdlib-session/
+backend/src/main/resources/application-local.yml

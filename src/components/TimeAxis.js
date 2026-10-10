@@ -1,33 +1,37 @@
 import React from 'react';
+import { SERVER_UTC_OFFSET_MS, formatServerTime } from '../utils';
 
 /**
  * TimeAxis
  *
  * Renders evenly-spaced tick marks and time labels along the bottom
  * of the timeline track. Tick density adapts to the selected view.
+ * Ticks fall on round game-server times (e.g. server midnight) and are
+ * labelled in server time.
  *
  * Props:
  *   windowStart — visible window start (ms)
  *   windowEnd   — visible window end (ms)
- *   view        — 'day' | 'week' | 'month'
+ *   view        — 'hour' | 'day' | 'week' | 'month'
  */
 function TimeAxis({ windowStart, windowEnd, view }) {
   const STEP_MS = {
-    day:   3600000 * 2,   // every 2 hours
+    hour:  60000 * 10,    // every 10 minutes
+    day:   3600000 * 3,   // every 3 hours
     week:  86400000,      // every day
     month: 86400000 * 3,  // every 3 days
   };
 
   const step = STEP_MS[view];
   const ticks = [];
-  let t = Math.ceil(windowStart / step) * step;
+  // Align to the step in server time: shift into server time, round, shift back
+  let t = Math.ceil((windowStart + SERVER_UTC_OFFSET_MS) / step) * step - SERVER_UTC_OFFSET_MS;
 
   while (t <= windowEnd) {
     const positionPercentage = ((t - windowStart) / (windowEnd - windowStart)) * 100;
-    const d = new Date(t);
-    const label = view === 'day'
-      ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const label = view === 'hour' || view === 'day'
+      ? formatServerTime(t, { hour: '2-digit', minute: '2-digit' })
+      : formatServerTime(t, { month: 'short', day: 'numeric' });
 
     ticks.push({ positionPercentage, label, key: t });
     t += step;

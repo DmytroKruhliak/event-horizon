@@ -1,66 +1,131 @@
 # Event Horizon
 
 A real-time event dashboard built with plain React (no external UI libraries).
+It shows Lineage 2 fortress sieges, read live from a Telegram chat by the Java
+backend in `backend/`.
 
 ## Getting started
+
+Start the backend first (see [Backend](#backend)), then the dashboard:
 
 ```bash
 npm install
 npm start
 ```
 
-The app opens at http://localhost:3000.
+The app opens at http://localhost:3000 and proxies `/api` to the backend on
+http://localhost:8080. To work on the UI without the backend, run with
+`REACT_APP_USE_MOCK=true npm start`.
+
+## Backend
+
+`backend/` is a Spring Boot 3 service (Java 17+, Maven) that logs in to Telegram
+**as your user account** (MTProto via [TDLight](https://github.com/tdlight-team/tdlight-java),
+a wrapper over Telegram's official TDLib), not as a bot. On startup it loads the
+last 3 days of the "La2world chat", then listens for new messages from
+"Suspicious Merchant" and turns them into fort statuses and timeline events.
+
+### First run (interactive login)
+
+1. Get `api_id` / `api_hash` from https://my.telegram.org/apps.
+2. Build and run in a terminal (the login prompts read from the console):
+
+   ```bash
+   cd backend
+   mvn package
+   TELEGRAM_API_ID=... TELEGRAM_API_HASH=... java -jar target/backend-0.1.0-SNAPSHOT.jar
+   ```
+
+3. Enter your phone number, the login code Telegram sends you, and your 2FA
+   password if you have one.
+
+The session is stored in `backend/tdlib-session/`; later starts log in silently.
+That folder is a logged-in credential: it is gitignored, never share it. Instead
+of env vars you can put `telegram.api-id` / `telegram.api-hash` in
+`backend/src/main/resources/application-local.yml` (also gitignored).
+
+Settings (chat id, sender id, backfill window, game timings) live in
+`backend/src/main/resources/application.yml`. Run `mvn test` in `backend/` for
+the parser/status/timeline tests; `--telegram.enabled=false` starts the API
+without connecting to Telegram.
+
+### API
+
+| Endpoint          | Returns |
+|-------------------|---------|
+| `GET /api/events` | Timeline events (shape below). |
+| `GET /api/forts`  | Every fort with status (`Registered/In Progress`, `Pending`, `Ready`, `Unknown`), time and owner — same logic as `l2/scripts/get_fortress_status.py`. |
+| `GET /api/stream` | Server-Sent Events; an `event` message per new or changed timeline event. |
+
+Each siege becomes one `siege` event that ends at the capture/defend message;
+each capture/defend becomes an 8-hour `cooldown` event until the fort is Ready.
 
 ## Project structure
 
 ```
+backend/                   # Spring Boot Telegram listener + API (see above)
 src/
-  api.js                   # fetchEvents() — swap mock data for a real backend call here
+  api.js                   # fetchEvents() / fetchForts() / subscribeToEvents() — the only backend seam
   utils.js                 # Shared constants and pure helper functions
   index.js                 # React entry point
   index.css                # Global reset
   components/
     Dashboard.js           # Top-level component; fetches data, manages clock and view
-    EventLine.js           # Horizontal bar for a single event (extensible)
-    EventTooltip.js        # Hover tooltip rendered inside EventLine
+    FortRow.js             # One row per fort: label, siege markers, cooldown strips
+    FortBadge.js           # Fort icon: flag or fortress picture in the fort's colour + 2-letter tag
+    EventTooltip.js        # Hover tooltip for siege markers and cooldown strips
     NowLine.js             # The golden-ratio vertical NOW marker
     TimeAxis.js            # Tick marks and time labels along the track
-    ViewToggle.js          # Day / Week / Month buttons
+    ViewToggle.js          # Hour / Day / Week / Month buttons
 ```
+
+## Dashboard layout
+
+One row per fort, in the order `GET /api/forts` returns them (by status:
+Siege, Pending, Ready, Unknown; then by time). Each row has:
+
+- **Label** — the fort's badge (a random fortress picture, picked once per page
+  load by `fortImage()`), name, current status with its time, and owner.
+- **Siege marker** — a fortress picture in the fort's coloured ring at the
+  siege start time; dimmed once the siege is over, glowing while it is running.
+  The four pictures in `public/fortresses/` are handed out to sieges one by
+  one in time order (`siegeImages()` in `src/utils.js`).
+- **Cooldown strip** — a thin bar in the fort's colour from a capture/defend
+  until the fort is Ready again.
+
+l2wiki has no picture per fort, so the same four pictures are reused; the
+in-game flag icon is only a fallback. Every badge is told apart by a per-fort colour and a two-letter
+abbreviation (`fortColor()` / `fortAbbr()` in `src/utils.js`).
 
 ## Event shape
 
 ```js
 {
-  id:          number,       // unique identifier
-  name:        string,       // display name shown on the bar
+  id:          number,       // Telegram message id
+  name:        string,       // fort name
+  fort:        string,       // fort name — the row the event is drawn on
+  kind:        string,       // "siege" (badge marker) | "cooldown" (strip)
   startTime:   string,       // ISO 8601 timestamp
-  duration:    number,       // length in minutes — controls bar width
-  priority:    number,       // 1 = high (red), 2 = normal (purple), 3+ = low (teal)
+  duration:    number,       // length in minutes
+  priority:    number,       // 1 siege, 2 captured, 3 defended (not used for layout)
+  owner:       string,       // capturing/defending clan, if known
   description: string,       // shown in the hover tooltip
-  pictureUrl:  string,       // avatar image URL
   // add any extra fields — they flow through to EventTooltip automatically
 }
 ```
 
-## Connecting to a real backend
+## Time zone
 
-Open `src/api.js` and replace the mock `setTimeout` with a real `fetch`:
-
-```js
-export async function fetchEvents() {
-  const response = await fetch('/api/events');
-  return response.json();
-}
-```
-
-## Sorting rules
-
-Events are sorted by `priority` (ascending), then alphabetically by `name`
-for events that share the same priority. See `sortEvents()` in `src/utils.js`.
+All times on the dashboard (clock, axis, statuses, tooltips) are shown in game
+server time, UTC+3, regardless of the viewer's own zone — change
+`SERVER_TIME_ZONE` / `SERVER_UTC_OFFSET_MS` in `src/utils.js` if the server
+moves. The backend works in real UTC instants and needs no correction.
 
 ## Real-time behaviour
 
-The dashboard re-evaluates positions every 10 seconds. The NOW line is fixed
-at the Golden Ratio position (61.8% from the left edge). Event bars animate
-smoothly leftward with a CSS `transition` as time advances.
+Events arrive over `/api/stream` and replace existing ones by `id`; each live
+event also refreshes `/api/forts`, which is refetched every minute as well
+(Pending turns Ready without a new message). On every (re)connect everything is
+refetched. The dashboard re-evaluates positions every second. The NOW line is
+fixed at the Golden Ratio position (38.2% from the left edge of the track);
+markers animate smoothly leftward with a CSS `transition` as time advances.

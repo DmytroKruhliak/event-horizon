@@ -1,19 +1,19 @@
 import React from 'react';
-import { formatDuration } from '../utils';
+import { formatDuration, formatServerTime } from '../utils';
 
 /**
  * EventTooltip
  *
- * Rendered inside EventLine on hover. Receives the full event JSON object,
- * so any future fields added to the event shape will automatically be
- * accessible here for display.
+ * Rendered inside FortRow's siege markers and cooldown strips on hover.
+ * Receives the full event JSON object, so any future fields added to the
+ * event shape will automatically be accessible here for display.
  *
  * Props:
- *   event — full event object (startTime, name, description, pictureUrl,
- *            duration, priority, plus any future fields)
+ *   event — full event object (startTime, name, description, duration,
+ *            kind, owner, plus any future fields)
  */
 function EventTooltip({ event }) {
-  const startDate = new Date(event.startTime).toLocaleString([], {
+  const startDate = formatServerTime(event.startTime, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -25,7 +25,8 @@ function EventTooltip({ event }) {
       <div style={styles.name}>{event.name}</div>
       <div style={styles.description}>{event.description}</div>
       <div style={styles.meta}>
-        {startDate} · {formatDuration(event.duration)} · P{event.priority}
+        {startDate} · {formatDuration(event.duration)}
+        {event.owner && <> · {event.owner}</>}
       </div>
 
       {/* Future fields: add extra rows here as the event shape grows */}
