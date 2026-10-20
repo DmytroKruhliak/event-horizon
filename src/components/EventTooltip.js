@@ -1,10 +1,13 @@
 import React from 'react';
-import { formatDuration, formatServerTime } from '../utils';
+import tooltipStyles from './tooltipStyles';
+import { formatDuration, formatServerTime, fortInfo } from '../utils';
 
 /**
  * EventTooltip
  *
- * Rendered inside FortRow's siege markers and cooldown strips on hover.
+ * Rendered inside FortRow's siege markers and cooldown strips on hover, in
+ * the same style as FortInfoTooltip: fort and territory, time, and the
+ * original message. (The fort's bonus lives only in the row-label tooltip.)
  * Receives the full event JSON object, so any future fields added to the
  * event shape will automatically be accessible here for display.
  *
@@ -13,6 +16,7 @@ import { formatDuration, formatServerTime } from '../utils';
  *            kind, owner, plus any future fields)
  */
 function EventTooltip({ event }) {
+  const info = fortInfo(event.fort);
   const startDate = formatServerTime(event.startTime, {
     month: 'short',
     day: 'numeric',
@@ -21,12 +25,15 @@ function EventTooltip({ event }) {
   });
 
   return (
-    <div style={styles.tooltip}>
-      <div style={styles.name}>{event.name}</div>
-      <div style={styles.description}>{event.description}</div>
-      <div style={styles.meta}>
-        {startDate} · {formatDuration(event.duration)}
-        {event.owner && <> · {event.owner}</>}
+    <div style={styles.box}>
+      <div style={tooltipStyles.header}>
+        {event.name}{info && ` | ${info.territory}`}
+      </div>
+      <div style={tooltipStyles.row}>
+        <span style={tooltipStyles.key}>Time: </span>{startDate} · {formatDuration(event.duration)}
+      </div>
+      <div style={tooltipStyles.row}>
+        <span style={tooltipStyles.key}>Message: </span>{event.description}
       </div>
 
       {/* Future fields: add extra rows here as the event shape grows */}
@@ -35,34 +42,11 @@ function EventTooltip({ event }) {
 }
 
 const styles = {
-  tooltip: {
-    position: 'absolute',
+  box: {
+    ...tooltipStyles.box,
     bottom: 'calc(100% + 8px)',
     left: 0,
-    background: '#1c1a2e',
-    border: '1px solid rgba(180,160,255,0.25)',
-    borderRadius: 8,
-    padding: '10px 13px',
-    width: 220,
-    zIndex: 50,
-    pointerEvents: 'none',
-  },
-  name: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#e2ddf5',
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 11,
-    color: '#8a7faa',
-    lineHeight: 1.5,
-  },
-  meta: {
-    fontSize: 10,
-    color: '#5a5070',
-    fontFamily: 'monospace',
-    marginTop: 6,
+    width: 260,
   },
 };
 

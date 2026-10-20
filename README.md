@@ -74,6 +74,8 @@ src/
     FortRow.js             # One row per fort: label, siege markers, cooldown strips
     FortBadge.js           # Fort icon: flag or fortress picture in the fort's colour + 2-letter tag
     EventTooltip.js        # Hover tooltip for siege markers and cooldown strips
+    FortInfoTooltip.js     # Hover tooltip on a fort label: territory, owner, status, bonus
+    tooltipStyles.js       # Shared tooltip look (grey header/keys, gold bonus)
     NowLine.js             # The golden-ratio vertical NOW marker
     TimeAxis.js            # Tick marks and time labels along the track
     ViewToggle.js          # Hour / Day / Week / Month buttons
@@ -85,12 +87,18 @@ One row per fort, in the order `GET /api/forts` returns them (by status:
 Siege, Registered, Ready, Pending, Unknown; then by time). Each row has:
 
 - **Label** — the fort's badge (a random fortress picture, picked once per page
-  load by `fortImage()`), name, current status with its time, and owner.
+  load by `fortImage()`) and three lines: name, current status with its time,
+  and owner.
+  Hovering it shows fort and territory, owner, status (same colour as in the
+  label) and the fort's capture bonus in gold (`fortInfo()` in `src/utils.js`,
+  from https://la2world.ru/blog/obnovlennye-kreposti/). Siege markers and
+  cooldown strips use the same tooltip style (`tooltipStyles.js`) but show only
+  fort and territory, time and the original message.
 - **Siege marker** — a fortress picture in the fort's coloured ring at the
   siege start time; dimmed once the siege is over, glowing while it is running.
   Until an announced siege starts, an amber pill next to it counts down the
-  time left with seconds (`42:05`, `1:02:07`), and the row label reads
-  `Registered in 42:05`. At zero the fort moves up to Siege.
+  time left with seconds (`42:05`, `1:02:07`), and the row label shows the
+  exact start time, e.g. `Registered 11:36:52 PM`. At zero the fort moves up to Siege.
   The four pictures in `public/fortresses/` are handed out to sieges one by
   one in time order (`siegeImages()` in `src/utils.js`).
 - **Cooldown strip** — a thin bar in the fort's colour from a capture/defend

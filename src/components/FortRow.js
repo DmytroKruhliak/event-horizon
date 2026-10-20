@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import FortBadge from './FortBadge';
 import EventTooltip from './EventTooltip';
+import FortInfoTooltip from './FortInfoTooltip';
 import { formatCountdown, formatStatusTime, fortColor, fortImage, statusInfo, toPct } from '../utils';
 
-export const ROW_HEIGHT = 46;
+export const ROW_HEIGHT = 52;
 export const LABEL_WIDTH = 240;
 
 /**
  * FortRow
  *
  * One timeline row per fort:
- *   - label   — fort badge (random fortress picture), name, current status and owner (from /api/forts)
+ *   - label   — fort badge (random fortress picture) and three lines: name, current
+ *               status with its time, and owner (from /api/forts);
+ *               hovering it shows the fort's territory and capture bonus
  *   - track   — each siege as a fortress-picture badge at its start time (with a
  *               live countdown while it hasn't started yet), and each
  *               capture/defend cooldown as a thin strip in the fort's colour
@@ -49,31 +52,37 @@ function FortRow({ fort, events, images, windowStart, windowEnd, now }) {
 }
 
 function FortLabel({ fort, now }) {
+  const [hovered, setHovered] = useState(false);
   const info = statusInfo(fort.status);
-  // A registered siege shows the time left to its start instead of the clock time
-  const startsIn = fort.status === 'Registered' && fort.time ? new Date(fort.time).getTime() - now : null;
-  const time = startsIn !== null
-    ? `in ${formatCountdown(startsIn)}`
-    : fort.time ? formatStatusTime(fort.time, now) : null;
+  // A registered siege shows its exact start time, to the second (the
+  // countdown is on its timeline marker)
+  const time = fort.time ? formatStatusTime(fort.time, now, fort.status === 'Registered') : null;
 
   return (
-    <div style={{
-      width: LABEL_WIDTH,
-      flexShrink: 0,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      paddingRight: 10,
-      boxSizing: 'border-box',
-    }}>
+    <div
+      style={{
+        position: 'relative',
+        width: LABEL_WIDTH,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        paddingRight: 10,
+        boxSizing: 'border-box',
+        cursor: 'default',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {hovered && <FortInfoTooltip fort={fort} />}
       <FortBadge fort={fort.fort} image={fortImage(fort.fort)} size={30} />
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={styles.fortName} title={fort.fort}>{fort.fort}</div>
         <div style={styles.statusLine}>
           <span style={{ color: info.color, fontWeight: 600 }}>{info.label}</span>
           {time && <span> {time}</span>}
-          {fort.owner && <span style={styles.owner} title={fort.owner}> · {fort.owner}</span>}
         </div>
+        {fort.owner && <div style={styles.ownerLine} title={fort.owner}>{fort.owner}</div>}
       </div>
     </div>
   );
@@ -173,8 +182,14 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
-  owner: {
+  ownerLine: {
+    fontSize: 10,
+    fontFamily: 'monospace',
     color: '#b8aed6',
+    marginTop: 1,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   countdown: {
     position: 'absolute',

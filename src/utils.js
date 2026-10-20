@@ -45,15 +45,19 @@ const serverDay = (time) => formatServerTime(time, { year: 'numeric', month: 'nu
 
 /**
  * Server time of day for a status time, prefixed with a short day when it
- * isn't today (server calendar).
- * e.g. "09:15 PM", "tmrw 04:53 AM", "yday 09:15 PM", "Oct 5 09:15 PM"
+ * isn't today (server calendar). `withSeconds` adds seconds (exact siege starts).
+ * e.g. "09:15 PM", "11:36:52 PM", "tomorrow 04:53 AM", "yesterday 09:15 PM", "Oct 5 09:15 PM"
  */
-export function formatStatusTime(time, now = Date.now()) {
-  const clock = formatServerTime(time, { hour: '2-digit', minute: '2-digit' });
+export function formatStatusTime(time, now = Date.now(), withSeconds = false) {
+  const clock = formatServerTime(time, {
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(withSeconds && { second: '2-digit' }),
+  });
   const day = serverDay(time);
   if (day === serverDay(now))            return clock;
-  if (day === serverDay(now + 86400000)) return `tmrw ${clock}`;
-  if (day === serverDay(now - 86400000)) return `yday ${clock}`;
+  if (day === serverDay(now + 86400000)) return `tomorrow ${clock}`;
+  if (day === serverDay(now - 86400000)) return `yesterday ${clock}`;
   return `${formatServerTime(time, { month: 'short', day: 'numeric' })} ${clock}`;
 }
 
@@ -146,6 +150,40 @@ const FORT_ABBR = {
   'Крепость Белых Песков':   'БП',
 };
 const FORT_ORDER = Object.keys(FORT_ABBR);
+
+/**
+ * Territory and capture bonus per fort, from https://la2world.ru/blog/obnovlennye-kreposti/
+ * (that page spells two forts differently: "Крепость Флоран" and "Крепость Ауру").
+ * Bonuses go to the player who captured the fort, not the whole clan.
+ */
+const FORT_INFO = {
+  'Укрепленный Лагерь':      { territory: 'Земли Глудио',    bonus: 'Маг атака +7%, Физ. атака +5%, Маг/Физ защита +5%, Макс НР/МР +10%' },
+  'Южная Крепость':          { territory: 'Земли Глудио',    bonus: 'Скорость магии +10%, маг. атака +15%, макс МР +30%, откат маг умений -5%' },
+  'Крепость Улья':           { territory: 'Земли Диона',     bonus: 'Шанс яда/кровотечения +30%, урон от яда/кровотечения +30%' },
+  'Драконья Крепость':       { territory: 'Земли Гирана',    bonus: 'Физ. атака/крит. урон +10%, преобразует 4% нанесенного физического урона в НР' },
+  'Крепость Слоновой Кости': { territory: 'Земли Орена',     bonus: 'Маг. атака +15%, дальность магических умений +15%' },
+  'Крепость Нарсилл':        { territory: 'Земли Адена',     bonus: 'Урон в ПвЕ +15%, увеличивает количество дропа/споила на 15%' },
+  'Крепость Гигантов':       { territory: 'Земли Адена',     bonus: 'Макс НР/СР +25%, защита в ПвП +5%' },
+  'Крепость Белых Песков':   { territory: 'Земли Иннадрила', bonus: 'Сила физ. умений +10%, шанс крит. удара для умений, не требующих кинжала, +20%' },
+  'Крепость Пограничья':     { territory: 'Земли Годдарда',  bonus: 'Защита от лука +20%, защита от арбалета +30%' },
+  'Крепость Болота':         { territory: 'Земли Руны',      bonus: 'Шанс наложить негативный эффект +25%' },
+  'Заснеженная Крепость':    { territory: 'Земли Шутгарта',  bonus: 'Физ. защита +10%, макс НР +20%, шанс получить физ. крит. удар -10%' },
+  'Крепость Флорана':        { territory: 'Земли Диона',     bonus: 'Наносимый урон в ПвП +15%, получаемый урон в ПвП +20%' },
+  'Крепость Туманных Гор':   { territory: 'Земли Орена',     bonus: 'Макс НР/СР +10%, с копьём шанс оглушения/сила физ. умений +30%' },
+  'Крепость Танор':          { territory: 'Земли Диона',     bonus: 'Макс СР +20%, маг. защита +8%, шанс получить маг. крит -8%' },
+  'Крепость Черепахи':       { territory: 'Земли Орена',     bonus: 'Защита щитом +17%, шанс блока +30%, шанс идеальной защиты щитом +1%' },
+  'Крепость Антараса':       { territory: 'Земли Орена',     bonus: 'Маг. атака +15%, маг. крит. урон +10%, макс МР +30%' },
+  'Западная Крепость':       { territory: 'Земли Орена',     bonus: 'Урон в ПвЕ +15%, увеличивает количество дропа/споила на 15%' },
+  'Крепость Охотников':      { territory: 'Земли Адена',     bonus: 'Физ. атака +10%, точность +4, дальность лука +100, урон физ. умений +15%, шанс крита физ. умений +20%' },
+  'Крепость Аару':           { territory: 'Земли Иннадрила', bonus: 'Физ. крит. урон +150, уворот +4, бег +1, откат физ. умений -10%' },
+  'Крепость Демона':         { territory: 'Земли Годдарда',  bonus: 'Маг. атака +15%, преобразует 10% нанесенного магического урона в НР' },
+  'Крепость Монахов':        { territory: 'Земли Руны',      bonus: 'Маг. атака +15%, макс НР +10%, макс МР +20%, сила исцеления +360' },
+};
+
+/** { territory, bonus } for a fort, or null if unknown. */
+export function fortInfo(fort) {
+  return FORT_INFO[fort] || null;
+}
 
 /** Badge label for a fort; unknown names fall back to their first two letters. */
 export function fortAbbr(fort) {
