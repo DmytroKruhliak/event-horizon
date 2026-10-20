@@ -54,7 +54,7 @@ without connecting to Telegram.
 | Endpoint          | Returns |
 |-------------------|---------|
 | `GET /api/events` | Timeline events (shape below). |
-| `GET /api/forts`  | Every fort with status (`Registered/In Progress`, `Pending`, `Ready`, `Unknown`), time and owner — same logic as `l2/scripts/get_fortress_status.py`. |
+| `GET /api/forts`  | Every fort with status, time and owner, sorted by status then time: `Siege` (happening now), `Registered` (announced, not started), `Ready`, `Pending` (in cooldown), `Unknown`. |
 | `GET /api/stream` | Server-Sent Events; an `event` message per new or changed timeline event. |
 
 Each siege becomes one `siege` event that ends at the capture/defend message;
@@ -82,7 +82,7 @@ src/
 ## Dashboard layout
 
 One row per fort, in the order `GET /api/forts` returns them (by status:
-Siege, Pending, Ready, Unknown; then by time). Each row has:
+Siege, Registered, Ready, Pending, Unknown; then by time). Each row has:
 
 - **Label** — the fort's badge (a random fortress picture, picked once per page
   load by `fortImage()`), name, current status with its time, and owner.

@@ -71,9 +71,13 @@ public class FortStateService {
             return new FortStatusView(fort, FortStatus.UNKNOWN, null, s.owner());
         }
         return switch (s.lastType()) {
-            case SIEGE_ANNOUNCED -> new FortStatusView(fort, FortStatus.IN_PROGRESS,
-                    s.lastTime().plus(rules.siegeStartDelay()), s.owner());
-            case SIEGE_STARTED -> new FortStatusView(fort, FortStatus.IN_PROGRESS, s.lastTime(), s.owner());
+            case SIEGE_ANNOUNCED -> {
+                // Registered until the announced start time, then a siege even before "началась" arrives.
+                Instant start = s.lastTime().plus(rules.siegeStartDelay());
+                FortStatus status = now.isBefore(start) ? FortStatus.REGISTERED : FortStatus.SIEGE;
+                yield new FortStatusView(fort, status, start, s.owner());
+            }
+            case SIEGE_STARTED -> new FortStatusView(fort, FortStatus.SIEGE, s.lastTime(), s.owner());
             case CAPTURED, DEFENDED -> {
                 // Evaluated at read time so Pending turns into Ready without a new message.
                 Instant readyAt = s.lastTime().plus(rules.readyAfter());

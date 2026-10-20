@@ -44,6 +44,6 @@ class BackendApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(21))
                 .andExpect(jsonPath("$[0].fort").value("Крепость Танор"))
-                .andExpect(jsonPath("$[0].status").value("Registered/In Progress"));
+                .andExpect(jsonPath("$[0].status").value("Siege"));
     }
 }

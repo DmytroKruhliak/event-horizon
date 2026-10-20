@@ -40,9 +40,9 @@ const MOCK_EVENTS = [
 ];
 
 const MOCK_FORTS = [
-  { fort: 'Крепость Аару',         status: 'Registered/In Progress', time: at(0.6),  owner: 'marazma' },
-  { fort: 'Крепость Белых Песков', status: 'Pending',                time: at(7.1),  owner: 'Hinata' },
-  { fort: 'Заснеженная Крепость',  status: 'Ready',                  time: at(-1.9), owner: '23М65' },
+  { fort: 'Крепость Аару',         status: 'Registered', time: at(0.6),  owner: 'marazma' },
+  { fort: 'Заснеженная Крепость',  status: 'Ready',      time: at(-1.9), owner: '23М65' },
+  { fort: 'Крепость Белых Песков', status: 'Pending',    time: at(7.1),  owner: 'Hinata' },
 ];
 
 async function getJson(path) {

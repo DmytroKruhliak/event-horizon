@@ -151,14 +151,15 @@ export function fortColor(fort, alpha = 1) {
 }
 
 /**
- * Status values as returned by GET /api/forts, in display order, with the
- * short label and colour the dashboard uses for each.
+ * Status values as returned by GET /api/forts, in display order (the backend
+ * already sorts rows this way), with the label and colour used for each.
  */
 export const FORT_STATUSES = [
-  { status: 'Registered/In Progress', label: 'Siege',   color: '#e05555' },
-  { status: 'Pending',                label: 'Pending', color: '#e0a955' },
-  { status: 'Ready',                  label: 'Ready',   color: '#50b4a0' },
-  { status: 'Unknown',                label: 'Unknown', color: '#5a5070' },
+  { status: 'Siege',      label: 'Siege',      color: '#e05555' }, // happening now
+  { status: 'Registered', label: 'Registered', color: '#e0a955' }, // announced, starts soon
+  { status: 'Ready',      label: 'Ready',      color: '#50b4a0' }, // can be sieged
+  { status: 'Pending',    label: 'Pending',    color: '#8a7faa' }, // in cooldown
+  { status: 'Unknown',    label: 'Unknown',    color: '#5a5070' },
 ];
 
 export function statusInfo(status) {
