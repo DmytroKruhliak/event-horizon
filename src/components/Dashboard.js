@@ -64,6 +64,22 @@ function Dashboard() {
     };
   }, []);
 
+  // A Registered fort becomes Siege at its start time; refetch statuses right
+  // then (plus a little slack) instead of waiting for the minute refresh.
+  useEffect(() => {
+    const now = Date.now();
+    const starts = forts
+      .filter((f) => f.status === 'Registered' && f.time)
+      .map((f) => new Date(f.time).getTime())
+      .filter((t) => t > now);
+    if (starts.length === 0) return undefined;
+    const id = setTimeout(
+      () => fetchForts().then(setForts).catch((err) => console.error(err)),
+      Math.min(...starts) - now + 1500,
+    );
+    return () => clearTimeout(id);
+  }, [forts]);
+
   // Real-time clock — ticks every 1 second
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);

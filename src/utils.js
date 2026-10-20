@@ -58,6 +58,19 @@ export function formatStatusTime(time, now = Date.now()) {
 }
 
 /**
+ * Live countdown to a moment, with seconds: "42:05", or "1:02:07" from an
+ * hour up. Rounds up so it reads "00:01" (not "00:00") in the last second.
+ */
+export function formatCountdown(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+/**
  * Returns a human-readable duration label.
  * e.g. 30 → "30m", 90 → "1h 30m", 120 → "2h"
  */

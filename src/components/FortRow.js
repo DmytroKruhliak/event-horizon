@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import FortBadge from './FortBadge';
 import EventTooltip from './EventTooltip';
-import { formatStatusTime, fortColor, fortImage, statusInfo, toPct } from '../utils';
+import { formatCountdown, formatStatusTime, fortColor, fortImage, statusInfo, toPct } from '../utils';
 
 export const ROW_HEIGHT = 46;
 export const LABEL_WIDTH = 240;
@@ -11,7 +11,8 @@ export const LABEL_WIDTH = 240;
  *
  * One timeline row per fort:
  *   - label   — fort badge (random fortress picture), name, current status and owner (from /api/forts)
- *   - track   — each siege as a fortress-picture badge at its start time, and each
+ *   - track   — each siege as a fortress-picture badge at its start time (with a
+ *               live countdown while it hasn't started yet), and each
  *               capture/defend cooldown as a thin strip in the fort's colour
  *               running until the fort is Ready again
  *
@@ -49,7 +50,11 @@ function FortRow({ fort, events, images, windowStart, windowEnd, now }) {
 
 function FortLabel({ fort, now }) {
   const info = statusInfo(fort.status);
-  const time = fort.time ? formatStatusTime(fort.time, now) : null;
+  // A registered siege shows the time left to its start instead of the clock time
+  const startsIn = fort.status === 'Registered' && fort.time ? new Date(fort.time).getTime() - now : null;
+  const time = startsIn !== null
+    ? `in ${formatCountdown(startsIn)}`
+    : fort.time ? formatStatusTime(fort.time, now) : null;
 
   return (
     <div style={{
@@ -102,7 +107,17 @@ function SiegeMarker({ event, image, windowStart, windowEnd, now }) {
         dimmed={endMs < now}
         active={startMs <= now && now <= endMs}
       />
+      {startMs > now && <Countdown ms={startMs - now} />}
       {hovered && <EventTooltip event={event} />}
+    </div>
+  );
+}
+
+/** Time left until an announced siege starts, in a pill to the right of its badge. */
+function Countdown({ ms }) {
+  return (
+    <div style={styles.countdown} title="Time left until the siege starts">
+      {formatCountdown(ms)}
     </div>
   );
 }
@@ -160,6 +175,23 @@ const styles = {
   },
   owner: {
     color: '#b8aed6',
+  },
+  countdown: {
+    position: 'absolute',
+    left: 'calc(100% + 5px)',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'rgba(224,169,85,0.16)',
+    border: '1px solid rgba(224,169,85,0.6)',
+    color: '#e0a955',
+    fontSize: 10,
+    fontWeight: 700,
+    fontFamily: 'monospace',
+    lineHeight: 1,
+    padding: '3px 5px',
+    borderRadius: 4,
+    whiteSpace: 'nowrap',
+    fontVariantNumeric: 'tabular-nums',
   },
 };
 

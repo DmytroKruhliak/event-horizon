@@ -88,6 +88,9 @@ Siege, Registered, Ready, Pending, Unknown; then by time). Each row has:
   load by `fortImage()`), name, current status with its time, and owner.
 - **Siege marker** — a fortress picture in the fort's coloured ring at the
   siege start time; dimmed once the siege is over, glowing while it is running.
+  Until an announced siege starts, an amber pill next to it counts down the
+  time left with seconds (`42:05`, `1:02:07`), and the row label reads
+  `Registered in 42:05`. At zero the fort moves up to Siege.
   The four pictures in `public/fortresses/` are handed out to sieges one by
   one in time order (`siegeImages()` in `src/utils.js`).
 - **Cooldown strip** — a thin bar in the fort's colour from a capture/defend
