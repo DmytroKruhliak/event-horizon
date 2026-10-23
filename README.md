@@ -6,16 +6,34 @@ backend in `backend/`.
 
 ## Getting started
 
-Start the backend first (see [Backend](#backend)), then the dashboard:
+Prerequisites: Java 17+, Maven, Node.js, and `TELEGRAM_API_ID` /
+`TELEGRAM_API_HASH` set as environment variables (see [Backend](#backend)).
+
+Once (the first Telegram login needs the console to itself):
 
 ```bash
 npm install
-npm start
+npm run dev:backend    # log in when prompted, then Ctrl+C
 ```
 
-The app opens at http://localhost:3000 and proxies `/api` to the backend on
-http://localhost:8080. To work on the UI without the backend, run with
-`REACT_APP_USE_MOCK=true npm start`.
+Every time after that, one command starts both:
+
+```bash
+npm run dev
+```
+
+It runs the backend (`mvn spring-boot:run`, :8080) and the dashboard
+(:3000, proxying `/api` to the backend) in one terminal, with `[backend]` /
+`[frontend]` prefixed logs. Ctrl+C, or either side crashing, stops both, so no
+stray Java process keeps the port or the Telegram session locked.
+
+Other ways to run:
+
+| Command | What it does |
+|---|---|
+| `npm run dev:backend` | Backend only (also for the first login) |
+| `npm run dev:frontend` / `npm start` | Dashboard only, against a backend already running |
+| `REACT_APP_USE_MOCK=true npm start` | Dashboard with built-in mock data, no backend |
 
 ## Backend
 

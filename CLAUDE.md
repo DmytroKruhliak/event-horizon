@@ -5,9 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm install     # install dependencies
-npm start       # run dev server (Create React App) at http://localhost:3000
-npm run build   # production build
+npm install            # install dependencies
+npm run dev            # backend (mvn spring-boot:run, :8080) + dashboard (:3000) together via concurrently; Ctrl+C stops both
+npm run dev:backend    # backend only — use this for the first, interactive Telegram login
+npm start              # dashboard dev server only (Create React App) at http://localhost:3000
+npm run build          # production build
 ```
 
 There is no frontend test suite and no dedicated lint script configured in `package.json` — don't invent `npm test`/`npm run lint` invocations.

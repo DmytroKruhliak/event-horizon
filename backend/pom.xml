@@ -78,6 +78,13 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- For `mvn spring-boot:run` (npm run dev). Java 17 on Windows defaults to the
+                         system code page (e.g. Cp1251); when output is piped, as under `concurrently`,
+                         logs would be written in it and Cyrillic shows up as garbage. UTF-8 output
+                         decodes correctly; a real console keeps using its own encoding. -->
+                    <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>
